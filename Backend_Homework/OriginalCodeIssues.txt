@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Xml.Linq;
+using Newtonsoft.Json;
+namespace Continero.Homework
+{
+    // define each class in a different file. That makes it easier to manage as a program grows in size
+    // in this case the class could be internal instead of public as it is not currently used anywhere else
+    public class Document
+    {
+        // there is <Nullable>enable</Nullable> option in the .csproj, therefore we get a compiler warning that non-nullable properties should contain a non-null value
+        // because the default value of reference types is "null" https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/default-values
+        // either assign a default value or set properties as nullable
+        public string Title { get; set; }
+        public string Text { get; set; }
+    }
+    class Program
+    {
+        // various chunks of code should be logically separated into methods so they can be reused later instead of having to type the same code again
+        static void Main(string[] args)
+        {
+            // might be beneficial to have file paths configurable (using a config file appSettings.json for example)
+            var sourceFileName = Path.Combine(Environment.CurrentDirectory, "..\\..\\..\\Source Files\\Document1.xml");
+
+            // OR target/source folders should be pre-created for the user
+            var targetFileName = Path.Combine(Environment.CurrentDirectory, "..\\..\\..\\Target Files\\Document1.json");
+            try
+            {
+                // we could use File.ReadAllText (opens, reads and then closes the file) or at least File.OpenRead to specify we want only "read" access to the file
+                FileStream sourceStream = File.Open(sourceFileName, FileMode.Open);
+                // StreamReader implements IDisposable interface, we should ideally wrap it in "using" construct or call its Dispose method manually when we're done using it
+                var reader = new StreamReader(sourceStream);
+                string input = reader.ReadToEnd();
+            }
+            catch (Exception ex)
+            {
+                // we lose original stack trace by throwing new exception, we should just use "throw" on its own without recreating the exception
+                // OR if we want to add our own exception message, we should pass the original exception as a parameter
+                throw new Exception(ex.Message);
+            }
+            // cannot build the solution because "input" variable is declared inside the "try" scope
+            var xdoc = XDocument.Parse(input);
+            // Element method returns null if it cannot find requested element by name, we should somehow handle this scenario because it currently throws an unhandled exception
+            var doc = new Document
+            {
+                Title = xdoc.Root.Element("title").Value,
+                Text = xdoc.Root.Element("text").Value
+            };
+            var serializedDoc = JsonConvert.SerializeObject(doc);
+
+            // we could use File.WriteAllText (creates file, writes the specified string and then closes the file. Existing file gets overwrited)
+            var targetStream = File.Open(targetFileName, FileMode.Create, FileAccess.Write);
+            
+            // StreamWriter implements IDisposable interface, we should ideally wrap it in "using" construct or call its Dispose method manually when we're done using it
+            var sw = new StreamWriter(targetStream);
+            sw.Write(serializedDoc);
+        }
+    }
+}
