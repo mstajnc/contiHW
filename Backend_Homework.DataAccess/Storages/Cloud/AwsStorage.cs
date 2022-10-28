@@ -1,14 +1,12 @@
-﻿using Backend_Homework.DataAccess.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Backend_Homework.DataAccess.Storages
+﻿namespace Backend_Homework.DataAccess.Storages.Cloud
 {
-    public class FileSystemStorage : IStorage
+    public class AwsStorage : ICloudStorage
     {
+        public Task<bool> DocumentExists(string key)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<string> ReadDocument(string key)
         {
             throw new NotImplementedException();

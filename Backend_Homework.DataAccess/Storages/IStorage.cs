@@ -8,6 +8,7 @@ namespace Backend_Homework.DataAccess.Storage
 {
     public interface IStorage
     {
+        Task<bool> DocumentExists(string key);
         Task<string> ReadDocument(string key);
 
         Task SaveDocument(string text, string documentExtension);
