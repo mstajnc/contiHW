@@ -9,6 +9,13 @@
             [ConsoleKey.H] = "[H]ttp"
         };
 
+        internal static Dictionary<ConsoleKey, string> FormatOptions = new()
+        {
+            [ConsoleKey.X] = "[X]ml",
+            [ConsoleKey.J] = "[J]son",
+            [ConsoleKey.B] = "[B]son",
+            [ConsoleKey.Y] = "[Y]aml",
+        };
 
         internal static string GetFormattedOutput(Dictionary<ConsoleKey, string> dictionary)
         {

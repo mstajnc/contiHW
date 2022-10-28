@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Backend_Homework.Application.Services
 {
-    public class DocumentService
+    public class DocumentService : IDocumentService
     {
         private readonly ILogger<DocumentService> _logger;
         private readonly IFileSystemStorage _fileSystemStorage;

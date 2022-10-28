@@ -1,4 +1,5 @@
-﻿using Backend_Homework.Application.Services;
+﻿using Backend_Homework.Application;
+using Backend_Homework.Application.Services;
 using Backend_Homework.ConsoleApp;
 using Backend_Homework.DataAccess;
 using Backend_Homework.DataAccess.Options;
@@ -13,9 +14,9 @@ namespace Continero.Homework
     {
         private readonly ILogger<ControlService> _logger;
         private readonly IOptions<FileSystemStorageOptions> _settings;
-        private readonly DocumentService _documentService;
+        private readonly IDocumentService _documentService;
 
-        public ControlService(ILogger<ControlService> logger, IOptions<FileSystemStorageOptions> settings, DocumentService documentService)
+        public ControlService(ILogger<ControlService> logger, IOptions<FileSystemStorageOptions> settings, IDocumentService documentService)
         {
             _logger = logger;
             _settings = settings;
@@ -28,16 +29,35 @@ namespace Continero.Homework
             _logger.LogInformation(_settings.Value.RootPath);
             
             var fileExistsInStorage = false;
-
             while (!fileExistsInStorage)
             {
                 var fileName = GetFileNameDialog();
                 fileExistsInStorage = await ChooseStorageDialog(fileName);
             }
+
+            var format = ChooseFormat();
             
             
             
 
+        }
+
+        private object ChooseFormat()
+        {
+            Console.WriteLine($"Select format of the resulting file:{Environment.NewLine}{UserActions.GetFormattedOutput(UserActions.FormatOptions)}");
+            var input = Console.ReadKey().Key;
+            _logger.LogDebug($"{nameof(ChooseFormat)} - User's input:{input}");
+
+            var fileFormat = input switch
+            {
+                ConsoleKey.X => FormatType.Xml,
+                ConsoleKey.J => FormatType.Json,
+                ConsoleKey.B => FormatType.Bson,
+                ConsoleKey.Y => FormatType.Yaml,
+                _ => throw new NotImplementedException()
+            };
+
+            return input;
         }
 
         private string GetFileNameDialog()
