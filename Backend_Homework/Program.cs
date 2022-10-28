@@ -3,41 +3,57 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
+using Backend_Homework.Application.Configuration;
+using System.Collections;
+using Microsoft.Extensions.Hosting;
+
 namespace Continero.Homework
 {
-    public class Document
+    public class Program
     {
-        public string Title { get; set; }
-        public string Text { get; set; }
-    }
-    class Program
-    {
-        static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
-            var sourceFileName = Path.Combine(Environment.CurrentDirectory, "..\\..\\..\\Source Files\\Document1.xml");
+            var currentEnvironment = EnvironmentHelper.GetCurrentEnvironment();
 
+            var host = Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(configuration =>
+                {
+                    configuration.AddJsonFile(Path.Combine(AssemblyDirectory, "appSettings.json"), false, true);
+                    configuration.AddJsonFile(Path.Combine(AssemblyDirectory, $"appSettings.{currentEnvironment:G}.json"), true, true);
+                })
+                .ConfigureServices(services =>
+                    services.AddOptions()
+                        .AddLogging(logger => logger.AddConsole())
+                        .AddTransient<ControlService>())
+                .ConfigureLogging(configuration =>
+                {
+                    configuration.AddConsole();
+                })
+                .Build();
 
-            var targetFileName = Path.Combine(Environment.CurrentDirectory, "..\\..\\..\\Target Files\\Document1.json");
-        try
+            var logger = host.Services.GetService<ILoggerFactory>()
+                .CreateLogger<Program>();            
+            logger.LogWarning("Starting application");
+
+            var mainService = host.Services.GetRequiredService<ControlService>();
+            await mainService.ExecuteAsync();                 
+
+            logger.LogDebug("All done!");
+
+        }
+        private static string AssemblyDirectory
+        {
+            get
             {
-                FileStream sourceStream = File.Open(sourceFileName, FileMode.Open);
-                var reader = new StreamReader(sourceStream);
-                string input = reader.ReadToEnd();
+                var codeBase = Assembly.GetExecutingAssembly().Location;
+                var uri = new UriBuilder(codeBase);
+                var path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-            var xdoc = XDocument.Parse(input);
-            var doc = new Document
-            {
-                Title = xdoc.Root.Element("title").Value,
-                Text = xdoc.Root.Element("text").Value
-            };
-            var serializedDoc = JsonConvert.SerializeObject(doc);
-            var targetStream = File.Open(targetFileName, FileMode.Create, FileAccess.Write);
-            var sw = new StreamWriter(targetStream);
-            sw.Write(serializedDoc);
         }
     }
 }
