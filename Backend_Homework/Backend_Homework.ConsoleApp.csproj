@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Backend_Homework.Application\Backend_Homework.Application.csproj" />
+    <ProjectReference Include="..\Backend_Homework.DataAccess\Backend_Homework.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>
