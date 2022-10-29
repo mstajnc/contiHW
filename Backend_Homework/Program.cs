@@ -11,6 +11,11 @@ using Backend_Homework.Application.Configuration;
 using System.Collections;
 using Microsoft.Extensions.Hosting;
 using Backend_Homework.DataAccess.Options;
+using Backend_Homework.Application.Services;
+using Backend_Homework.DataAccess.Storages.FileSystem;
+using Backend_Homework.DataAccess.Storages.Cloud;
+using Backend_Homework.DataAccess.Storages.Web;
+using Backend_Homework.DataAccess.Services;
 
 namespace Continero.Homework
 {
@@ -31,7 +36,13 @@ namespace Continero.Homework
                     services
                         .AddLogging(logger => logger.AddConsole())
                         .Configure<FileSystemStorageOptions>(builder.Configuration.GetSection(FileSystemStorageOptions.FileSystemStorage))
-                        .AddTransient<ControlService>())
+                        .AddTransient<ControlService>()
+                        .AddTransient<IDocumentService, DocumentService>()
+                        .AddTransient<IFileSystemStorage, FileSystemStorage>()
+                        .AddTransient<ICloudStorage, AzureStorage>()
+                        .AddTransient<IWebStorage, WebStorage>()
+                        .AddTransient<IStorageService, StorageService>()
+                        .AddTransient<IConverterService, ConverterService>())
                 .ConfigureLogging(configuration =>
                 {
                     configuration.AddConsole();
