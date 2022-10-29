@@ -1,27 +1,36 @@
-﻿using Backend_Homework.DataAccess.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Backend_Homework.DataAccess.Options;
+using Microsoft.Extensions.Options;
 
 namespace Backend_Homework.DataAccess.Storages.FileSystem
 {
     public class FileSystemStorage : IFileSystemStorage
     {
-        public Task<bool> DocumentExists(string key)
+        private readonly string _targetPath;
+        private readonly string _sourcePath;
+        public FileSystemStorage(IOptions<FileSystemStorageOptions> options)
         {
-            throw new NotImplementedException();
+            if (options.Value.RootPath is null)
+            {
+                throw new ArgumentNullException(nameof(options.Value.RootPath));
+            }
+            _targetPath = Path.Combine(options.Value.RootPath, options.Value.TargetFolderName);
+            _sourcePath = Path.Combine(options.Value.RootPath, options.Value.SourceFolderName);
         }
 
-        public Task<string> ReadDocument(string key)
+        public async Task<bool> DocumentExists(string key)
         {
-            throw new NotImplementedException();
+            if(_sourcePath == null) return false;
+            return File.Exists(Path.Combine(_sourcePath, key));
         }
 
-        public Task SaveDocument(string text, string documentExtension)
+        public async Task<string> ReadDocument(string key)
         {
-            throw new NotImplementedException();
+            return await File.ReadAllTextAsync(Path.Combine(_sourcePath, key));
+        }
+
+        public async Task SaveDocument(string text, string documentExtension)
+        {
+            //return await File.WriteAllTextAsync(Path.Combine(_targetPath, key), text);
         }
     }
 }
