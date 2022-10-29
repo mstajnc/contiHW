@@ -28,9 +28,9 @@ namespace Backend_Homework.DataAccess.Storages.FileSystem
             return await File.ReadAllTextAsync(Path.Combine(_sourcePath, key));
         }
 
-        public async Task SaveDocument(string text, string documentExtension)
+        public async Task SaveDocument(string text, string fileExtension)
         {
-            //return await File.WriteAllTextAsync(Path.Combine(_targetPath, key), text);
+            await File.WriteAllTextAsync(Path.Combine(_targetPath, $"{DateTime.Now}.{fileExtension}"), text);
         }
     }
 }

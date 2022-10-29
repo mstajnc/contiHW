@@ -5,7 +5,7 @@
         internal static Dictionary<ConsoleKey, string> StorageOptions = new()
         {
             [ConsoleKey.F] = "[F]ile system",
-            [ConsoleKey.A] = "[A]zure",
+            [ConsoleKey.C] = "[C]loud",
             [ConsoleKey.H] = "[H]ttp"
         };
 

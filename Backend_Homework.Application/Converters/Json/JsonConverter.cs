@@ -7,7 +7,7 @@ namespace Backend_Homework.Application.Converters.Json
         private static readonly string[] _fileExtensions = new[] { "json" };
         public string[] FileExtensions => _fileExtensions;
 
-        public async Task<string> Convert<T>(T source)
+        public async Task<string> Convert(object source)
         {
             return JsonSerializer.Serialize(source);
         }

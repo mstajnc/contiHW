@@ -36,5 +36,10 @@ namespace Backend_Homework.DataAccess.Services
         {
             return await _storageTypeStorages[storageType].ReadDocument(fileName);
         }
+
+        public async Task SaveDocument(StorageType storageType, string text, string fileExtension)
+        {
+            await _storageTypeStorages[storageType].SaveDocument(text, fileExtension);
+        }
     }
 }

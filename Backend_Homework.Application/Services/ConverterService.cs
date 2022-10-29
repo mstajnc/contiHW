@@ -27,9 +27,12 @@ namespace Backend_Homework.Application.Services
 
         public async Task<string> ConvertObjectToString(object obj, FormatType formatType)
         {
-            throw new NotImplementedException();
+            return await _formatTypeConverters[formatType].Convert(obj);
         }
 
-       
+        public string[] GetFormatTypeFileExtensions(FormatType formatType)
+        {
+            return _formatTypeConverters[formatType].FileExtensions;
+        }
     }
 }

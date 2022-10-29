@@ -1,10 +1,9 @@
 ﻿using Backend_Homework.Application;
+using Backend_Homework.Application.BusinessObjects;
 using Backend_Homework.Application.Services;
 using Backend_Homework.ConsoleApp;
 using Backend_Homework.DataAccess;
 using Backend_Homework.DataAccess.Options;
-using Backend_Homework.DataAccess.Storages.Cloud;
-using Backend_Homework.DataAccess.Storages.FileSystem;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -25,70 +24,98 @@ namespace Continero.Homework
 
         internal async Task ExecuteAsync(CancellationToken stoppingToken = default)
         {
-            _logger.LogInformation("Doing something");
-            _logger.LogInformation(_settings.Value.RootPath);
-            
-            var fileExistsInStorage = false;
-            while (!fileExistsInStorage)
-            {
-                var fileName = GetFileNameDialog();
-                fileExistsInStorage = await ChooseStorageDialog(fileName);
-            }
-
-            var format = ChooseFormat();
-            
-            
-            
-
+            var (fileName, storage) = await SelectFileStep();
+            await ConversionStep(fileName, storage);
         }
 
-        private object ChooseFormat()
+        private async Task ConversionStep(string fileName, StorageType storage)
         {
-            Console.WriteLine($"Select format of the resulting file:{Environment.NewLine}{UserActions.GetFormattedOutput(UserActions.FormatOptions)}");
-            var input = Console.ReadKey().Key;
-            _logger.LogDebug($"{nameof(ChooseFormat)} - User's input:{input}");
+            _logger.LogDebug("Running {step}", nameof(ConversionStep));
+            var format = ChooseFormatDialog();
+            var fileContent = await _documentService.GetDataFromFile<Document>(storage, fileName);
+            var formattedText = await _documentService.Convert(fileContent, format);
 
-            var fileFormat = input switch
+            await _documentService.SaveFile(storage, formattedText, format);
+        }
+
+        private async Task<(string, StorageType)> SelectFileStep()
+        {
+            _logger.LogDebug("Running {step}", nameof(SelectFileStep));
+            var fileExistsInStorage = false;
+            var fileName = string.Empty;
+            var storage = StorageType.FileSystem;
+            while (!fileExistsInStorage)
             {
-                ConsoleKey.X => FormatType.Xml,
-                ConsoleKey.J => FormatType.Json,
-                ConsoleKey.B => FormatType.Bson,
-                ConsoleKey.Y => FormatType.Yaml,
-                _ => throw new NotImplementedException()
+                fileName = GetFileNameDialog();
+                (fileExistsInStorage, storage)  = await ChooseStorageDialog(fileName);
+            }
+            return (fileName, storage);
+        }
+
+        private FormatType ChooseFormatDialog()
+        {
+            _logger.LogDebug("Running {dialog}", nameof(ChooseFormatDialog));
+
+            var selectionOptions = new Dictionary<ConsoleKey, FormatType>()
+            {
+                [ConsoleKey.X] = FormatType.Xml,
+                [ConsoleKey.J] = FormatType.Json,
+                [ConsoleKey.B] = FormatType.Bson,
+                [ConsoleKey.Y] = FormatType.Yaml,
             };
 
-            return input;
+            var isFormatSelected = false;
+            var selectedFormat = FormatType.Xml;
+
+            while (!isFormatSelected)
+            {
+                Console.WriteLine($"Select format of the resulting file:{Environment.NewLine}{UserActions.GetFormattedOutput(UserActions.FormatOptions)}");
+                var input = Console.ReadKey().Key;
+                _logger.LogDebug("{dialogName} - User's input:{input}", nameof(ChooseFormatDialog), input);
+                isFormatSelected = selectionOptions.TryGetValue(input, out selectedFormat);
+            }
+
+            return selectedFormat;
         }
 
         private string GetFileNameDialog()
         {
-            Console.WriteLine($"Enter the name of the file");
+            _logger.LogDebug("Running {dialog}", nameof(GetFileNameDialog));
+
+            Console.WriteLine($"Enter the name of the file (including file extension)");
             var input = Console.ReadLine(); //TODO: validate user input
-            _logger.LogDebug($"{nameof(GetFileNameDialog)} - User's input:{input}");
-            return input;
+            _logger.LogDebug("{dialogName} - User's input:{input}", nameof(GetFileNameDialog), input);
+            return input ?? string.Empty;
         }
 
-        private async Task<bool> ChooseStorageDialog(string fileName)
+        private async Task<(bool, StorageType)> ChooseStorageDialog(string fileName)
         {
-            Console.WriteLine($"Select storage type:{Environment.NewLine}{UserActions.GetFormattedOutput(UserActions.StorageOptions)}");
-            var input = Console.ReadKey().Key;
-            _logger.LogDebug($"{nameof(ChooseStorageDialog)} - User's input:{input}");
+            _logger.LogDebug("Running {dialog}", nameof(ChooseStorageDialog));
 
-            var storageType = input switch
+            var selectionOptions = new Dictionary<ConsoleKey, StorageType>()
             {
-                ConsoleKey.F => StorageType.FileSystem,
-                ConsoleKey.A => StorageType.Cloud,
-                ConsoleKey.W => StorageType.Web,
-                _ => throw new NotImplementedException()
+                [ConsoleKey.F] = StorageType.FileSystem,
+                [ConsoleKey.C] = StorageType.Cloud,
+                [ConsoleKey.H] = StorageType.Web,
             };
-                
-            var fileExists = await _documentService.CheckIfFileExists(storageType, fileName);
-            if (!fileExists)
+            var isStorageSelected = false;
+            var selectedStorage = StorageType.FileSystem;
+
+            while (!isStorageSelected)
             {
-                Console.WriteLine($"File {fileName} does not exist in {storageType}, please try again");
+                Console.WriteLine($"Select storage type:{Environment.NewLine}{UserActions.GetFormattedOutput(UserActions.StorageOptions)}");
+                var input = Console.ReadKey().Key;
+                _logger.LogDebug("{dialogName} - User's input:{input}", nameof(ChooseStorageDialog), input);
+                isStorageSelected = selectionOptions.TryGetValue(input, out selectedStorage);
             }
 
-            return fileExists;            
+            var fileExists = await _documentService.CheckIfFileExists(selectedStorage, fileName);
+            if (!fileExists)
+            {
+                Console.WriteLine($"File {fileName} does not exist in {selectedStorage}, please try again");
+            }
+
+            return (fileExists, selectedStorage);
         }
 
 

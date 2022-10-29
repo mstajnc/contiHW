@@ -4,6 +4,6 @@
     {
         string[] FileExtensions { get; }
         Task<T> ParseText<T>(string text);
-        Task<string> Convert<T>(T source);
+        Task<string> Convert(object source);
     }
 }

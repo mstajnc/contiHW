@@ -1,15 +1,6 @@
 ﻿using Backend_Homework.DataAccess;
 using Backend_Homework.DataAccess.Services;
-using Backend_Homework.DataAccess.Storage;
-using Backend_Homework.DataAccess.Storages.Cloud;
-using Backend_Homework.DataAccess.Storages.FileSystem;
-using Backend_Homework.DataAccess.Storages.Web;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Backend_Homework.Application.Services
 {
@@ -30,22 +21,31 @@ namespace Backend_Homework.Application.Services
 
         public async Task<bool> CheckIfFileExists(StorageType storageType, string fileName)
         {
-            _logger.LogDebug($"Document service checks if {fileName} in {storageType} exists");
-            return await _storageService.CheckIfFileExists(storageType, fileName);
-            
+            _logger.LogDebug("{serviceName} checks if {fileName} in {storageType} exists", nameof(DocumentService), fileName, storageType);
+            return await _storageService.CheckIfFileExists(storageType, fileName);            
         }
 
-        public Task<string> FormatText(string text, FormatType resultFormatType)
+        public async Task<string> Convert(object obj, FormatType resultFormatType)
         {
-            throw new NotImplementedException();
+            _logger.LogDebug("{serviceName} converts object to {resultFormatType}", nameof(DocumentService), resultFormatType);
+
+            var newContent = await _converterService.ConvertObjectToString(obj, resultFormatType);
+            return newContent;
+        }
+        public async Task SaveFile(StorageType storage, string fileContent, FormatType resultFormatType)
+        {
+            _logger.LogDebug("{serviceName} save object to {storage} in format {resultFormatType}", nameof(DocumentService), storage, resultFormatType);
+
+            var fileExtension = _converterService.GetFormatTypeFileExtensions(resultFormatType).First();
+            await _storageService.SaveDocument(storage, fileContent, fileExtension);
         }
 
         public async Task<T> GetDataFromFile<T>(StorageType storageType, string fileName)
         {
-            _logger.LogDebug($"Document service retrieves {fileName} from {storageType}");
+            _logger.LogDebug("{serviceName} retrieves {fileName} from {storage}", nameof(DocumentService), fileName, storageType);
+
             var fileContent = await _storageService.GetTextFromFile(storageType, fileName);
             var fileExtension = Path.GetExtension(fileName);
-
             return await _converterService.ConvertStringToObject<T>(fileContent, fileExtension);
         }
     }
