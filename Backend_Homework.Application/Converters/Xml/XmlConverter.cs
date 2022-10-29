@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend_Homework.Application.Converters
+namespace Backend_Homework.Application.Converters.Xml
 {
-    public class JsonConverter : IConverter
+    public class XmlConverter : IXmlConverter
     {
-        private static readonly string[] _fileExtensions = new[]{"json"};
+        private static readonly string[] _fileExtensions = new[] { "xml" };
         public string[] FileExtensions => _fileExtensions;
 
         public Task<string> Convert<T>(T source)
