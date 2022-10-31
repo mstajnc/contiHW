@@ -9,9 +9,9 @@ namespace Backend_Homework.DataAccess.Storages.FileSystem
         private readonly string _sourcePath;
         public FileSystemStorage(IOptions<FileSystemStorageOptions> options)
         {
-            if (options.Value.RootPath is null)
+            if (options.Value.RootPath is null || options.Value.SourceFolderName is null || options.Value.TargetFolderName is null)
             {
-                throw new ArgumentNullException(nameof(options.Value.RootPath));
+                throw new ArgumentNullException(nameof(options.Value));
             }
             _targetPath = Path.Combine(options.Value.RootPath, options.Value.TargetFolderName);
             _sourcePath = Path.Combine(options.Value.RootPath, options.Value.SourceFolderName);
@@ -19,7 +19,6 @@ namespace Backend_Homework.DataAccess.Storages.FileSystem
 
         public async Task<bool> DocumentExists(string key)
         {
-            if(_sourcePath == null) return false;
             return File.Exists(Path.Combine(_sourcePath, key));
         }
 
@@ -30,7 +29,8 @@ namespace Backend_Homework.DataAccess.Storages.FileSystem
 
         public async Task SaveDocument(string text, string fileExtension)
         {
-            await File.WriteAllTextAsync(Path.Combine(_targetPath, $"{DateTime.Now}.{fileExtension}"), text);
+            var fileName = $"{Guid.NewGuid()}{fileExtension}";
+            await File.WriteAllTextAsync(Path.Combine(_targetPath, fileName), text);
         }
     }
 }

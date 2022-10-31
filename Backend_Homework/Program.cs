@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml.Linq;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using Backend_Homework.Application.Configuration;
-using System.Collections;
 using Microsoft.Extensions.Hosting;
 using Backend_Homework.DataAccess.Options;
 using Backend_Homework.Application.Services;
-using Backend_Homework.DataAccess.Storages.FileSystem;
-using Backend_Homework.DataAccess.Storages.Cloud;
-using Backend_Homework.DataAccess.Storages.Web;
 using Backend_Homework.DataAccess.Services;
+using Backend_Homework.ConsoleApp.DI;
 
 namespace Continero.Homework
 {
@@ -25,7 +17,6 @@ namespace Continero.Homework
         public async static Task Main(string[] args)
         {
             var currentEnvironment = EnvironmentHelper.GetCurrentEnvironment();
-            var x = Path.Combine(AssemblyDirectory, "appSettings.json");
             var host = Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(configuration =>
                 {
@@ -38,28 +29,27 @@ namespace Continero.Homework
                         .Configure<FileSystemStorageOptions>(builder.Configuration.GetSection(FileSystemStorageOptions.FileSystemStorage))
                         .AddTransient<ControlService>()
                         .AddTransient<IDocumentService, DocumentService>()
-                        .AddTransient<IFileSystemStorage, FileSystemStorage>()
-                        .AddTransient<ICloudStorage, AzureStorage>()
-                        .AddTransient<IWebStorage, WebStorage>()
                         .AddTransient<IStorageService, StorageService>()
-                        .AddTransient<IConverterService, ConverterService>())
+                        .AddTransient<IConverterService, ConverterService>()
+                        .AddStorages()
+                        .AddConverters())
                 .ConfigureLogging(configuration =>
                 {
                     configuration.AddConsole();
-                })
-                
+                })                
                 .Build();
 
-            var logger = host.Services.GetService<ILoggerFactory>()
-                .CreateLogger<Program>();            
-            logger.LogWarning("Starting application");
+            var logger = host.Services.GetService<ILoggerFactory>().CreateLogger<Program>();            
+            logger.LogInformation("Starting application");
 
             var mainService = host.Services.GetRequiredService<ControlService>();
             await mainService.ExecuteAsync();                 
 
-            logger.LogDebug("All done!");
-
+            logger.LogInformation("All done!");
         }
+
+        
+
         private static string AssemblyDirectory
         {
             get

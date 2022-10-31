@@ -4,7 +4,7 @@ namespace Backend_Homework.Application.Converters.Json
 {
     public class JsonConverter : IJsonConverter
     {
-        private static readonly string[] _fileExtensions = new[] { "json" };
+        private static readonly string[] _fileExtensions = new[] { ".json" };
         public string[] FileExtensions => _fileExtensions;
 
         public async Task<string> Convert(object source)

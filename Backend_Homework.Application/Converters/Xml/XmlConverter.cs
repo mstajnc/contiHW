@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Xml.Serialization;
 
 namespace Backend_Homework.Application.Converters.Xml
 {
     public class XmlConverter : IXmlConverter
     {
-        private static readonly string[] _fileExtensions = new[] { "xml" };
+        private static readonly string[] _fileExtensions = new[] { ".xml" };
         public string[] FileExtensions => _fileExtensions;
 
-        public Task<string> Convert<T>(T source)
+        public async Task<string> Convert(object source)
         {
-            throw new NotImplementedException();
+            using var stringWriter = new StringWriter();
+            var serializer = new XmlSerializer(source.GetType());
+            serializer.Serialize(stringWriter, source);
+            return stringWriter.ToString();
         }
 
-        public Task<T> ParseText<T>(string text)
+        public async Task<T> ParseText<T>(string text)
         {
-            throw new NotImplementedException();
+            using var stringReader = new StringReader(text);
+            var serializer = new XmlSerializer(typeof(T));
+            return (T)serializer.Deserialize(stringReader);
         }
     }
 }
